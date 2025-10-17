@@ -1,6 +1,34 @@
 from datetime import date
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
+
+
+# Users
+class UserBase(BaseModel):
+    email: EmailStr
+
+
+class UserCreate(UserBase):
+    password: str
+    currency: str = "$"
+
+
+class UserOut(UserBase):
+    id: int
+    currency: str
+
+    class Config:
+        orm_mode = True
+
+
+# Auth
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    user_id: Optional[int] = None
 
 
 # Category
