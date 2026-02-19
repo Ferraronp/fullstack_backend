@@ -1,30 +1,28 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from database import get_db
-import models, schemas
-from utils import hash_password, verify_password
-from auth import create_access_token, get_current_user, oauth2_scheme
+from db.database import get_db
+from schemas import auth
+from schemas import user as user_schema
+from models import models
+from utils.utils import hash_password, verify_password
+from utils.auth import create_access_token, get_current_user, oauth2_scheme
+import crud.user
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-@router.post("/register", response_model=schemas.UserOut)
-def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    existing = db.query(models.User).filter(models.User.email == user.email).first()
+@router.post("/register", response_model=user_schema.UserOut)
+def register(user: user_schema.UserCreate, db: Session = Depends(get_db)):
+    existing = crud.user.get_user(user, db)
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
-
     hashed = hash_password(user.password)
-    new_user = models.User(email=user.email, hashed_password=hashed, currency=user.currency)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    new_user = crud.user.create_user(user, db, hashed)
     return new_user
 
-
-@router.post("/login", response_model=schemas.Token)
-def login(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    db_user = db.query(models.User).filter(models.User.email == user.email).first()
+@router.post("/login", response_model=auth.Token)
+def login(user: user_schema.UserCreate, db: Session = Depends(get_db)):
+    db_user = crud.user.get_user(user, db)
     if not db_user or not verify_password(user.password, db_user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
@@ -32,7 +30,7 @@ def login(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return {"access_token": token, "token_type": "bearer"}
 
 
-@router.get("/me", response_model=schemas.UserOut)
+@router.get("/me", response_model=user_schema.UserOut)
 def get_me(current_user: models.User = Depends(get_current_user)):
     return current_user
 
@@ -46,4 +44,3 @@ def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db), c
     revoked = models.RevokedToken(token=token)
     db.add(revoked)
     db.commit()
-    return {"detail": "Logged out"}

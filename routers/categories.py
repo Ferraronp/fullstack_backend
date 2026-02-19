@@ -1,71 +1,56 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import get_db
-from auth import get_current_user
-import models, schemas
+from db.database import get_db
+from utils.auth import get_current_user
+import schemas.category
+from models import models
+import crud.category
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
 
 
-@router.get("/", response_model=list[schemas.Category])
+@router.get("/", response_model=list[schemas.category.Category])
 def get_categories(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    return db.query(models.Category).filter(models.Category.user_id == current_user.id).all()
+    return crud.category.get_categories(db, current_user)
 
 
-@router.get("/{category_id}", response_model=schemas.Category)
+@router.get("/{category_id}", response_model=schemas.category.Category)
 def get_category(category_id: int, db: Session = Depends(get_db),
                  current_user: models.User = Depends(get_current_user)):
-    category = db.query(models.Category).filter(
-        models.Category.id == category_id,
-        models.Category.user_id == current_user.id
-    ).first()
+    category = crud.category.get_category(category_id, db, current_user)
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
     return category
 
 
-@router.post("/", response_model=schemas.Category)
+@router.post("/", response_model=schemas.category.Category)
 def create_category(
-        category: schemas.CategoryCreate,
+        category: schemas.category.CategoryCreate,
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_user)
 ):
-    new_category = models.Category(**category.model_dump(), user_id=current_user.id)
-    db.add(new_category)
-    db.commit()
-    db.refresh(new_category)
+    new_category = crud.category.create_category(category, db, current_user)
     return new_category
 
 
-@router.put("/{category_id}", response_model=schemas.Category)
+@router.put("/{category_id}", response_model=schemas.category.Category)
 def update_category(
         category_id: int,
-        updated: schemas.CategoryCreate,
+        updated: schemas.category.CategoryCreate,
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_user)
 ):
-    category = db.query(models.Category).filter(
-        models.Category.id == category_id,
-        models.Category.user_id == current_user.id
-    ).first()
+    category = crud.category.get_category(category_id, db, current_user)
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
-    for key, value in updated.model_dump().items():
-        setattr(category, key, value)
-    db.commit()
-    db.refresh(category)
+    crud.category.update_category(category, updated, db)
     return category
 
 
 @router.delete("/{category_id}")
 def delete_category(category_id: int, db: Session = Depends(get_db),
                     current_user: models.User = Depends(get_current_user)):
-    category = db.query(models.Category).filter(
-        models.Category.id == category_id,
-        models.Category.user_id == current_user.id
-    ).first()
+    category = crud.category.get_category(category_id, db, current_user)
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
-    db.delete(category)
-    db.commit()
-    return {"detail": "Category deleted"}
+    crud.category.delete_category(category, db)
