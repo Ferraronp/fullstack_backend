@@ -19,8 +19,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.now()  + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
+    # Ensure role is included if present in data
     encoded = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded
 

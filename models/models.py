@@ -11,6 +11,7 @@ class User(Base):
     email = Column(String, unique=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     currency = Column(String, default="$")
+    role = Column(String, default="user", nullable=False)  # new field for RBAC
 
     categories = relationship("Category", back_populates="user")
     operations = relationship("Operation", back_populates="user")

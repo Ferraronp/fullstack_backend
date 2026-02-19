@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from db.database import Base, engine
-from routers import users, categories, operations
+from routers import users, categories, operations, admin
 from starlette.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
@@ -23,6 +23,7 @@ app.add_middleware(
 app.include_router(users.router)
 app.include_router(categories.router)
 app.include_router(operations.router)
+app.include_router(admin.router)
 
 
 @app.get("/")

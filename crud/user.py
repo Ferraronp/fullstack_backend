@@ -8,7 +8,7 @@ def get_user(user: schemas.user.UserCreate, db: Session):
     return user
 
 def create_user(user: schemas.user.UserCreate, db: Session, hashed: str):
-    new_user = models.User(email=user.email, hashed_password=hashed, currency=user.currency)
+    new_user = models.User(email=user.email, hashed_password=hashed, currency=user.currency, role=user.role)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
