@@ -110,15 +110,5 @@ Admin‑only utilities (e.g., role promotion). Details can be added as needed.
 - Permission errors return `403 Forbidden`.
 - Not found resources return `404 Not Found`.
 
-## Testing
-### Backend Tests (`fullstack_backend/tests/`)
-- **test_user.py** – registration, login, profile retrieval, admin list.
-- **test_category.py** – CRUD operations with authentication.
-- **test_operation.py** – CRUD and filtering.
-- Use `pytest` and FastAPI's `TestClient`.
-
-### Frontend Tests (optional)
-Place Jest tests under `fullstack_frontend/src/__tests__/` covering API wrapper functions in `src/api/api.js`.
-
 ---
 *Generated documentation for developers and QA engineers.*
