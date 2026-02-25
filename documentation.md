@@ -74,30 +74,30 @@ Utility functions to check user roles and enforce permissions in routers.
 All routers are included in `main.py`.
 
 ### 1. `routers/users.py` (префикс `/auth`)
-| Method | Path             | Description              | Request Body | Response                                      | Auth         |
-|--------|------------------|--------------------------|--------------|-----------------------------------------------|--------------|
-| `POST` | `/auth/register` | Register a new user      | `UserCreate` | `UserOut` (201)                               | None         |
-| `POST` | `/auth/login`    | Obtain JWT token         | `UserCreate` | `Token` (200)                                 | None         |
-| `GET`  | `/auth/me`       | Get current user profile | –            | `UserOut` (200)                               | Bearer token |
-| `POST` | `/auth/logout`   | Logout user              | –            | `{"detail": "Successfully logged out"}` (200) | Bearer       |
+| Method | Path             | Description              | Request Body | Response        | Auth         |
+|--------|------------------|--------------------------|--------------|-----------------|--------------|
+| `POST` | `/auth/register` | Register a new user      | `UserCreate` | `UserOut` (200) | None         |
+| `POST` | `/auth/login`    | Obtain JWT token         | `UserCreate` | `Token` (200)   | None         |
+| `GET`  | `/auth/me`       | Get current user profile | –            | `UserOut` (200) | Bearer token |
+| `POST` | `/auth/logout`   | Logout user              | –            | `None` (200)    | Bearer       |
 
 ### 2. `routers/categories.py` (префикс `/categories`)
-| Method   | Path                        | Description            | Request Body     | Response                               | Auth   |
-|----------|-----------------------------|------------------------|------------------|----------------------------------------|--------|
-| `GET`    | `/categories/`              | List user's categories | –                | List[`Category`] (200)                 | Bearer |
-| `GET`    | `/categories/{category_id}` | Get specific category  | –                | `Category` (200)                       | Bearer |
-| `POST`   | `/categories/`              | Create a category      | `CategoryCreate` | `Category` (201)                       | Bearer |
-| `PUT`    | `/categories/{category_id}` | Update category        | `CategoryCreate` | `Category` (200)                       | Owner  |
-| `DELETE` | `/categories/{category_id}` | Delete category        | –                | `{"detail": "Category deleted"}` (200) | Owner  |
+| Method   | Path                        | Description            | Request Body     | Response               | Auth   |
+|----------|-----------------------------|------------------------|------------------|------------------------|--------|
+| `GET`    | `/categories/`              | List user's categories | –                | List[`Category`] (200) | Bearer |
+| `GET`    | `/categories/{category_id}` | Get specific category  | –                | `Category` (200)       | Bearer |
+| `POST`   | `/categories/`              | Create a category      | `CategoryCreate` | `Category` (200)       | Bearer |
+| `PUT`    | `/categories/{category_id}` | Update category        | `CategoryCreate` | `Category` (200)       | Owner  |
+| `DELETE` | `/categories/{category_id}` | Delete category        | –                | `None` (200)           | Owner  |
 
 ### 3. `routers/operations.py` (префикс `/operations`)
 | Method   | Path                         | Description                      | Request Body                          | Response                                    | Auth   |
 |----------|------------------------------|----------------------------------|---------------------------------------|---------------------------------------------|--------|
 | `GET`    | `/operations/`               | List operations (filter by date) | Query params `start_date`, `end_date` | List[`Operation`] (200)                     | Bearer |
-| `POST`   | `/operations/`               | Create operation                 | `OperationCreate`                     | `Operation` (201)                           | Bearer |
+| `POST`   | `/operations/`               | Create operation                 | `OperationCreate`                     | `Operation` (200)                           | Bearer |
 | `GET`    | `/operations/{operation_id}` | Get operation                    | –                                     | `Operation` (200)                           | Owner  |
 | `PUT`    | `/operations/{operation_id}` | Update operation                 | `OperationCreate`                     | `Operation` (200)                           | Owner  |
-| `DELETE` | `/operations/{operation_id}` | Delete operation                 | –                                     | `{"detail": "Operation deleted"}` (200)     | Owner  |
+| `DELETE` | `/operations/{operation_id}` | Delete operation                 | –                                     | `None` (200)                                | Owner  |
 | `GET`    | `/operations/balance/total`  | Get total balance                | –                                     | `{"balance": float, "currency": str}` (200) | Bearer |
 
 ### 4. `routers/admin.py` (префикс `/admin`)

@@ -29,6 +29,10 @@ def create_category(
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_user)
 ):
+    categories = crud.category.get_categories(db, current_user)
+    for cat in categories:
+        if cat.name == category.name:
+            raise HTTPException(status_code=400, detail="Category already exists")
     new_category = crud.category.create_category(category, db, current_user)
     return new_category
 

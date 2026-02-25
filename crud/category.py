@@ -2,7 +2,7 @@ from models import models
 from sqlalchemy.orm import Session
 import schemas.category
 
-def get_categories(db: Session, current_user: models.User):
+def get_categories(db: Session, current_user: models.User) -> list[models.Category]:
     return db.query(models.Category).filter(models.Category.user_id == current_user.id).all()
 
 

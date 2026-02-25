@@ -27,7 +27,6 @@ def create_operation(
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_user)
 ):
-    print(op.category_id)
     new_op = crud.operation.create_operation(op, db, current_user)
     return new_op
 

@@ -13,7 +13,6 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/register", response_model=user_schema.UserOut)
 def register(user: user_schema.UserCreate, db: Session = Depends(get_db)):
-    print(user)
     existing = crud.user.get_user(user, db)
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -24,7 +23,6 @@ def register(user: user_schema.UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=auth.Token)
 def login(user: user_schema.UserCreate, db: Session = Depends(get_db)):
-    print(user)
     db_user = crud.user.get_user(user, db)
     if not db_user or not verify_password(user.password, db_user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
