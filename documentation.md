@@ -73,15 +73,13 @@ Utility functions to check user roles and enforce permissions in routers.
 ## Routers and Endpoints
 All routers are included in `main.py`.
 
-### 1. `routers/users.py`
+### 1. `routers/users.py` (префикс `/auth`)
 | Method | Path | Description | Request Body | Response | Auth |
 |--------|------|-------------|--------------|----------|------|
-| `POST` | `/users/` | Register a new user | `UserCreate` | `UserRead` (201) | None |
-| `POST` | `/login/` | Obtain JWT token | `OAuth2PasswordRequestForm` | `Token` (200) | None |
-| `GET` | `/users/me/` | Get current user profile | – | `UserRead` (200) | Bearer token |
-| `GET` | `/users/` | List all users (admin only) | – | List[`UserRead`] (200) | Admin |
-| `PUT` | `/users/{user_id}` | Update user (admin or self) | `UserUpdate` | `UserRead` (200) | Bearer |
-| `DELETE` | `/users/{user_id}` | Delete user (admin only) | – | `{"detail": "User deleted"}` (200) | Admin |
+| `POST` | `/auth/register` | Register a new user | `UserCreate` | `UserRead` (201) | None |
+| `POST` | `/auth/login` | Obtain JWT token | `OAuth2PasswordRequestForm` | `Token` (200) | None |
+| `GET` | `/auth/me` | Get current user profile | – | `UserRead` (200) | Bearer token |
+| `POST` | `/auth/logout` | Logout user | – | `{"detail": "Successfully logged out"}` (200) | Bearer |
 
 ### 2. `routers/categories.py`
 | Method | Path | Description | Request Body | Response | Auth |
@@ -96,13 +94,17 @@ All routers are included in `main.py`.
 | Method | Path | Description | Request Body | Response | Auth |
 |--------|------|-------------|--------------|----------|------|
 | `POST` | `/operations/` | Create operation | `OperationCreate` | `OperationRead` (201) | Bearer |
-| `GET` | `/operations/` | List operations (filter by date/type) | Query params `type`, `start_date`, `end_date` | List[`OperationRead`] (200) | Bearer |
+| `GET` | `/operations/` | List operations (filter by date) | Query params `start_date`, `end_date` | List[`OperationRead`] (200) | Bearer |
+| `GET` | `/operations/balance/total` | Get total balance | – | `{"total": float}` (200) | Bearer |
 | `GET` | `/operations/{id}` | Get operation | – | `OperationRead` (200) | Owner |
 | `PUT` | `/operations/{id}` | Update operation | `OperationUpdate` | `OperationRead` (200) | Owner |
 | `DELETE` | `/operations/{id}` | Delete operation | – | `{"detail": "Operation deleted"}` (200) | Owner |
 
 ### 4. `routers/admin.py`
-Admin‑only utilities (e.g., role promotion). Details can be added as needed.
+| Method | Path | Description | Request Body | Response | Auth |
+|--------|------|-------------|--------------|----------|------|
+| `GET` | `/admin/users` | List all users | – | List[`UserRead`] (200) | Admin only |
+| `PUT` | `/admin/users/{user_id}/role` | Change user role | `{"role": "user" or "admin"}` | `UserRead` (200) | Admin only |
 
 ## Error Handling
 - Validation errors return `422 Unprocessable Entity` with details.
