@@ -35,37 +35,37 @@ fullstack_backend/
 ```
 
 ## Database Models (`models/models.py`)
-| Model | Table | Fields |
-|-------|-------|--------|
-| **User** | `users` | `id: int PK`, `username: str`, `email: str`, `hashed_password: str`, `is_active: bool`, `role: str` |
-| **Category** | `categories` | `id: int PK`, `name: str`, `description: Optional[str]`, `owner_id: int FK -> users.id` |
-| **Operation** | `operations` | `id: int PK`, `amount: float`, `type: str (income/expense)`, `date: datetime`, `category_id: int FK -> categories.id`, `owner_id: int FK -> users.id` |
+| Model            | Table            | Fields                                                                                                                                      |
+|------------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| **User**         | `users`          | `id: int PK`, `email: str unique`, `hashed_password: str`, `currency: str default "$"`, `role: str default "user"`                          |
+| **Category**     | `categories`     | `id: int PK`, `name: str unique`, `color: str nullable`, `user_id: int FK -> users.id`                                                      |
+| **Operation**    | `operations`     | `id: int PK`, `date: date`, `amount: float`, `comment: str nullable`, `category_id: int FK -> categories.id`, `user_id: int FK -> users.id` |
+| **RevokedToken** | `revoked_tokens` | `id: int PK`, `token: str unique`, `created_at: datetime`                                                                                   |
 
 ## Pydantic Schemas (`schemas/`)
 ### `user.py`
-- **UserCreate** – fields: `username`, `email`, `password`.
-- **UserRead** – fields: `id`, `username`, `email`, `is_active`, `role`.
-- **UserUpdate** – optional fields for updating a user.
+- **UserBase** – `email: EmailStr`
+- **UserCreate** – `email`, `password`, `currency` (default "$"), `role` (default "user").
+- **UserOut** – `id`, `email`, `currency`, `role`.
+- **RoleUpdate** – `role: str`.
 
 ### `auth.py`
 - **Token** – `access_token`, `token_type`.
-- **TokenData** – `username` (optional).
+- **TokenData** – `user_id: Optional[int]`.
 
 ### `category.py`
-- **CategoryCreate** – `name`, `description`.
-- **CategoryRead** – `id`, `name`, `description`, `owner_id`.
-- **CategoryUpdate** – optional `name`, `description`.
+- **CategoryBase** – `name`, `color` (optional).
+- **CategoryCreate** – наследует от CategoryBase.
+- **Category** – `id`, `name`, `color`.
 
 ### `operation.py`
-- **OperationCreate** – `amount`, `type`, `date`, `category_id`.
-- **OperationRead** – all fields plus `owner_id`.
-- **OperationUpdate** – optional fields for partial update.
+- **OperationBase** – `date`, `amount`, `comment`, `category_id` (optional).
+- **OperationCreate** – наследует от OperationBase.
+- **Operation** – `id`, `date`, `amount`, `comment`, `category_id`, `category` (optional).
 
 ## Authentication (`utils/auth.py`)
 - **create_access_token(data: dict, expires_delta: Optional[timedelta] = None)** – generates a JWT.
 - **get_current_user(token: str = Depends(oauth2_scheme))** – validates token and returns the `User` model.
-- **get_current_active_user** – ensures the user is active.
-- **get_current_admin_user** – ensures the user has role `admin`.
 
 ## Role Management (`utils/role.py`)
 Utility functions to check user roles and enforce permissions in routers.
@@ -74,43 +74,46 @@ Utility functions to check user roles and enforce permissions in routers.
 All routers are included in `main.py`.
 
 ### 1. `routers/users.py` (префикс `/auth`)
-| Method | Path | Description | Request Body | Response | Auth |
-|--------|------|-------------|--------------|----------|------|
-| `POST` | `/auth/register` | Register a new user | `UserCreate` | `UserRead` (201) | None |
-| `POST` | `/auth/login` | Obtain JWT token | `OAuth2PasswordRequestForm` | `Token` (200) | None |
-| `GET` | `/auth/me` | Get current user profile | – | `UserRead` (200) | Bearer token |
-| `POST` | `/auth/logout` | Logout user | – | `{"detail": "Successfully logged out"}` (200) | Bearer |
+| Method | Path             | Description              | Request Body | Response                                      | Auth         |
+|--------|------------------|--------------------------|--------------|-----------------------------------------------|--------------|
+| `POST` | `/auth/register` | Register a new user      | `UserCreate` | `UserOut` (201)                               | None         |
+| `POST` | `/auth/login`    | Obtain JWT token         | `UserCreate` | `Token` (200)                                 | None         |
+| `GET`  | `/auth/me`       | Get current user profile | –            | `UserOut` (200)                               | Bearer token |
+| `POST` | `/auth/logout`   | Logout user              | –            | `{"detail": "Successfully logged out"}` (200) | Bearer       |
 
-### 2. `routers/categories.py`
-| Method | Path | Description | Request Body | Response | Auth |
-|--------|------|-------------|--------------|----------|------|
-| `POST` | `/categories/` | Create a category | `CategoryCreate` | `CategoryRead` (201) | Bearer |
-| `GET` | `/categories/` | List user's categories | – | List[`CategoryRead`] (200) | Bearer |
-| `GET` | `/categories/{id}` | Get specific category | – | `CategoryRead` (200) | Bearer |
-| `PUT` | `/categories/{id}` | Update category | `CategoryUpdate` | `CategoryRead` (200) | Owner |
-| `DELETE` | `/categories/{id}` | Delete category | – | `{"detail": "Category deleted"}` (200) | Owner |
+### 2. `routers/categories.py` (префикс `/categories`)
+| Method   | Path                        | Description            | Request Body     | Response                               | Auth   |
+|----------|-----------------------------|------------------------|------------------|----------------------------------------|--------|
+| `GET`    | `/categories/`              | List user's categories | –                | List[`Category`] (200)                 | Bearer |
+| `GET`    | `/categories/{category_id}` | Get specific category  | –                | `Category` (200)                       | Bearer |
+| `POST`   | `/categories/`              | Create a category      | `CategoryCreate` | `Category` (201)                       | Bearer |
+| `PUT`    | `/categories/{category_id}` | Update category        | `CategoryCreate` | `Category` (200)                       | Owner  |
+| `DELETE` | `/categories/{category_id}` | Delete category        | –                | `{"detail": "Category deleted"}` (200) | Owner  |
 
-### 3. `routers/operations.py`
-| Method | Path | Description | Request Body | Response | Auth |
-|--------|------|-------------|--------------|----------|------|
-| `POST` | `/operations/` | Create operation | `OperationCreate` | `OperationRead` (201) | Bearer |
-| `GET` | `/operations/` | List operations (filter by date) | Query params `start_date`, `end_date` | List[`OperationRead`] (200) | Bearer |
-| `GET` | `/operations/balance/total` | Get total balance | – | `{"total": float}` (200) | Bearer |
-| `GET` | `/operations/{id}` | Get operation | – | `OperationRead` (200) | Owner |
-| `PUT` | `/operations/{id}` | Update operation | `OperationUpdate` | `OperationRead` (200) | Owner |
-| `DELETE` | `/operations/{id}` | Delete operation | – | `{"detail": "Operation deleted"}` (200) | Owner |
+### 3. `routers/operations.py` (префикс `/operations`)
+| Method   | Path                         | Description                      | Request Body                          | Response                                    | Auth   |
+|----------|------------------------------|----------------------------------|---------------------------------------|---------------------------------------------|--------|
+| `GET`    | `/operations/`               | List operations (filter by date) | Query params `start_date`, `end_date` | List[`Operation`] (200)                     | Bearer |
+| `POST`   | `/operations/`               | Create operation                 | `OperationCreate`                     | `Operation` (201)                           | Bearer |
+| `GET`    | `/operations/{operation_id}` | Get operation                    | –                                     | `Operation` (200)                           | Owner  |
+| `PUT`    | `/operations/{operation_id}` | Update operation                 | `OperationCreate`                     | `Operation` (200)                           | Owner  |
+| `DELETE` | `/operations/{operation_id}` | Delete operation                 | –                                     | `{"detail": "Operation deleted"}` (200)     | Owner  |
+| `GET`    | `/operations/balance/total`  | Get total balance                | –                                     | `{"balance": float, "currency": str}` (200) | Bearer |
 
-### 4. `routers/admin.py`
-| Method | Path | Description | Request Body | Response | Auth |
-|--------|------|-------------|--------------|----------|------|
-| `GET` | `/admin/users` | List all users | – | List[`UserRead`] (200) | Admin only |
-| `PUT` | `/admin/users/{user_id}/role` | Change user role | `{"role": "user" or "admin"}` | `UserRead` (200) | Admin only |
+### 4. `routers/admin.py` (префикс `/admin`)
+| Method | Path                          | Description      | Request Body | Response              | Auth       |
+|--------|-------------------------------|------------------|--------------|-----------------------|------------|
+| `GET`  | `/admin/users`                | List all users   | –            | List[`UserOut`] (200) | Admin only |
+| `PUT`  | `/admin/users/{user_id}/role` | Change user role | `RoleUpdate` | `UserOut` (200)       | Admin only |
 
 ## Error Handling
 - Validation errors return `422 Unprocessable Entity` with details.
 - Authentication errors return `401 Unauthorized`.
 - Permission errors return `403 Forbidden`.
 - Not found resources return `404 Not Found`.
+- Email already registered returns `400 Bad Request`.
+- Invalid credentials returns `401 Unauthorized`.
+- Already logged out returns `200 OK` with appropriate message.
 
 ---
 *Generated documentation for developers and QA engineers.*
