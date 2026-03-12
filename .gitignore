@@ -3,3 +3,7 @@ venv
 .idea
 .env
 finance.db
+__pycache__/
+*.pyc
+*.pyo
+*.db

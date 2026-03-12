@@ -16,7 +16,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 def register(user: user_schema.UserCreate, db: Session = Depends(get_db)):
     existing = crud.user.get_user(user, db)
     if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="Username already taken")
     hashed = hash_password(user.password)
     new_user = crud.user.create_user(user, db, hashed)
     return new_user
@@ -42,7 +42,6 @@ def get_me(current_user: models.User = Depends(get_current_user)):
 
 @router.post("/logout")
 def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    # если токен уже отозван — ничего страшного
     existing = db.query(models.RevokedToken).filter(models.RevokedToken.token == token).first()
     if existing:
         return {"detail": "Already logged out"}
