@@ -38,11 +38,11 @@ def client():
 def test_register_user(client):
     response = client.post(
         "/auth/register",
-        json={"email": "test@example.com", "password": "test123", "currency": "$"}
+        json={"username": "testuser", "password": "test123", "currency": "$"}
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["email"] == "test@example.com"
+    assert data["username"] == "testuser"
     assert data["currency"] == "$"
     assert "id" in data
 
@@ -50,11 +50,11 @@ def test_register_user(client):
 def test_register_duplicate_email(client):
     client.post(
         "/auth/register",
-        json={"email": "duplicate@example.com", "password": "test123"}
+        json={"username": "duplicateuser", "password": "test123"}
     )
     response = client.post(
         "/auth/register",
-        json={"email": "duplicate@example.com", "password": "test123"}
+        json={"username": "duplicateuser", "password": "test123"}
     )
     assert response.status_code == 400
 
@@ -62,11 +62,11 @@ def test_register_duplicate_email(client):
 def test_login_user(client):
     client.post(
         "/auth/register",
-        json={"email": "login@example.com", "password": "test123"}
+        json={"username": "loginuser", "password": "test123"}
     )
     response = client.post(
         "/auth/login",
-        json={"email": "login@example.com", "password": "test123"}
+        data={"username": "loginuser", "password": "test123"}
     )
     assert response.status_code == 200
     data = response.json()
@@ -77,29 +77,29 @@ def test_login_user(client):
 def test_login_invalid_credentials(client):
     response = client.post(
         "/auth/login",
-        json={"email": "nonexistent@example.com", "password": "wrongpass"}
+        data={"username": "nonexistent", "password": "wrongpass"}
     )
     assert response.status_code == 401
 
 
 def test_get_current_user(client):
-    register_response = client.post(
+    client.post(
         "/auth/register",
-        json={"email": "current@example.com", "password": "test123"}
+        json={"username": "currentuser", "password": "test123"}
     )
     login_response = client.post(
         "/auth/login",
-        json={"email": "current@example.com", "password": "test123"}
+        data={"username": "currentuser", "password": "test123"}
     )
     token = login_response.json()["access_token"]
-    
+
     response = client.get(
         "/auth/me",
         headers={"Authorization": f"Bearer {token}"}
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["email"] == "current@example.com"
+    assert data["username"] == "currentuser"
 
 
 def test_get_current_user_without_token(client):
@@ -108,43 +108,40 @@ def test_get_current_user_without_token(client):
 
 
 def test_logout_user(client):
-    register_response = client.post(
+    client.post(
         "/auth/register",
-        json={"email": "logout@example.com", "password": "test123"}
+        json={"username": "logoutuser", "password": "test123"}
     )
     login_response = client.post(
         "/auth/login",
-        json={"email": "logout@example.com", "password": "test123"}
+        data={"username": "logoutuser", "password": "test123"}
     )
     token = login_response.json()["access_token"]
-    
+
     response = client.post(
         "/auth/logout",
         headers={"Authorization": f"Bearer {token}"}
     )
     assert response.status_code == 200
-    # API возвращает пустой ответ при логауте, поэтому проверяем только статус код
 
 
 def test_logout_twice(client):
-    register_response = client.post(
+    client.post(
         "/auth/register",
-        json={"email": "logout2@example.com", "password": "test123"}
+        json={"username": "logoutuser2", "password": "test123"}
     )
     login_response = client.post(
         "/auth/login",
-        json={"email": "logout2@example.com", "password": "test123"}
+        data={"username": "logoutuser2", "password": "test123"}
     )
     token = login_response.json()["access_token"]
-    
-    # Первый logout
+
     response1 = client.post(
         "/auth/logout",
         headers={"Authorization": f"Bearer {token}"}
     )
     assert response1.status_code == 200
-    
-    # Второй logout - должен вернуть 401, так как токен отозван
+
     response2 = client.post(
         "/auth/logout",
         headers={"Authorization": f"Bearer {token}"}
