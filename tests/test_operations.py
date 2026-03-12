@@ -36,15 +36,15 @@ def client():
     Base.metadata.drop_all(bind=engine)
 
 
-def create_test_user(client, email="test@example.com", password="test123"):
+def create_test_user(client, username="testuser", password="test123"):
     """Создает тестового пользователя и возвращает токен"""
     client.post(
         "/auth/register",
-        json={"email": email, "password": password, "currency": "$"}
+        json={"username": username, "password": password, "currency": "$"}
     )
     response = client.post(
         "/auth/login",
-        json={"email": email, "password": password}
+        data={"username": username, "password": password}
     )
     return response.json()["access_token"]
 

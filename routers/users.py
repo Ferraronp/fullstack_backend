@@ -24,12 +24,10 @@ def register(user: user_schema.UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=auth.Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    # OAuth2PasswordRequestForm использует поля username и password (form-data)
-    # В качестве username принимаем email
-    class EmailAdapter:
-        email = form_data.username
+    class UsernameAdapter:
+        username = form_data.username
 
-    db_user = crud.user.get_user(EmailAdapter(), db)
+    db_user = crud.user.get_user(UsernameAdapter(), db)
     if not db_user or not verify_password(form_data.password, db_user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
