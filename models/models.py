@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Date, DateTime
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Date, DateTime, Boolean
 from datetime import datetime
 from sqlalchemy.orm import relationship
 from db.database import Base
@@ -11,10 +11,24 @@ class User(Base):
     username = Column(String, unique=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     currency = Column(String, default="$")
-    role = Column(String, default="user", nullable=False)  # new field for RBAC
+    role = Column(String, default="user", nullable=False)
 
     categories = relationship("Category", back_populates="user")
     operations = relationship("Operation", back_populates="user")
+    refresh_tokens = relationship("RefreshToken", back_populates="user")
+
+
+class RefreshToken(Base):
+    __tablename__ = "refresh_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    token = Column(String, unique=True, nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    revoked = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="refresh_tokens")
 
 
 class Category(Base):

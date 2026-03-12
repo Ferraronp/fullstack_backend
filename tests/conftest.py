@@ -31,8 +31,8 @@ def client():
     Base.metadata.drop_all(bind=engine)
 
 
-def register_and_login(client, username, password="test123", role="user"):
-    """Регистрирует пользователя и возвращает токен."""
+def register_and_login(client, username, password="test123", role="user") -> dict:
+    """Регистрирует пользователя и возвращает {access_token, refresh_token}."""
     client.post(
         "/auth/register",
         json={"username": username, "password": password, "currency": "$", "role": role}
@@ -41,4 +41,4 @@ def register_and_login(client, username, password="test123", role="user"):
         "/auth/login",
         data={"username": username, "password": password}
     )
-    return response.json()["access_token"]
+    return response.json()
