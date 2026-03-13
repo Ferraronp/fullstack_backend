@@ -55,6 +55,7 @@ class Operation(Base):
 
     category = relationship("Category", back_populates="operations")
     user = relationship("User", back_populates="operations")
+    files = relationship("OperationFile", back_populates="operation", cascade="all, delete-orphan")
 
 
 class RevokedToken(Base):
@@ -63,3 +64,16 @@ class RevokedToken(Base):
     id = Column(Integer, primary_key=True, index=True)
     token = Column(String, unique=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class OperationFile(Base):
+    __tablename__ = "operation_files"
+
+    id = Column(Integer, primary_key=True, index=True)
+    operation_id = Column(Integer, ForeignKey("operations.id"), nullable=False)
+    filename = Column(String, nullable=False)       # оригинальное имя файла
+    s3_key = Column(String, unique=True, nullable=False)  # ключ в S3
+    content_type = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    operation = relationship("Operation", back_populates="files")

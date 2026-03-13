@@ -10,3 +10,4 @@ pytest-asyncio
 httpx
 pytest-cov
 email-validator
+boto3

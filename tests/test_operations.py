@@ -50,7 +50,7 @@ def test_get_operations(client):
 
     response = client.get("/operations/", headers={"Authorization": f"Bearer {tokens['access_token']}"})
     assert response.status_code == 200
-    assert len(response.json()) == 2
+    assert response.json()["total"] == 2
 
 
 def test_get_operations_with_date_filter(client):
@@ -65,8 +65,8 @@ def test_get_operations_with_date_filter(client):
     response = client.get(f"/operations/?start_date={today}&end_date={today}", headers={"Authorization": f"Bearer {tokens['access_token']}"})
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 1
-    assert data[0]["amount"] == 100.00
+    assert data["total"] == 1
+    assert data["items"][0]["amount"] == 100.00
 
 
 def test_get_operation_by_id(client):
