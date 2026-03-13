@@ -2,10 +2,15 @@ from fastapi import FastAPI
 from db.database import Base, engine
 from routers import users, categories, operations, admin
 from starlette.middleware.cors import CORSMiddleware
+from services.s3_service import ensure_bucket
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Personal Finance Tracker API (with Auth)")
+
+@app.on_event("startup")
+def startup():
+    ensure_bucket()
 
 FRONTEND_ORIGINS = [
     "http://localhost:5173",
