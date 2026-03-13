@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 S3_ENDPOINT = os.getenv("S3_ENDPOINT", "http://localhost:9000")
+S3_PUBLIC_ENDPOINT = os.getenv("S3_PUBLIC_ENDPOINT", "http://localhost:9000")
 S3_ACCESS_KEY = os.getenv("S3_ACCESS_KEY", "minioadmin")
 S3_SECRET_KEY = os.getenv("S3_SECRET_KEY", "minioadmin")
 S3_BUCKET = os.getenv("S3_BUCKET", "finance-files")
@@ -32,6 +33,17 @@ def _get_client():
     )
 
 
+def _get_public_client():
+    """Клиент с публичным endpoint — для генерации presigned URL."""
+    return boto3.client(
+        "s3",
+        endpoint_url=S3_PUBLIC_ENDPOINT,
+        aws_access_key_id=S3_ACCESS_KEY,
+        aws_secret_access_key=S3_SECRET_KEY,
+        config=Config(signature_version="s3v4"),
+    )
+
+
 def ensure_bucket():
     client = _get_client()
     try:
@@ -41,7 +53,6 @@ def ensure_bucket():
 
 
 def upload_file(file_bytes: bytes, original_filename: str, content_type: str) -> str:
-    """Загружает файл в S3 и возвращает s3_key."""
     ext = original_filename.rsplit(".", 1)[-1] if "." in original_filename else ""
     s3_key = f"{uuid.uuid4()}.{ext}" if ext else str(uuid.uuid4())
 
@@ -56,8 +67,7 @@ def upload_file(file_bytes: bytes, original_filename: str, content_type: str) ->
 
 
 def get_presigned_url(s3_key: str) -> str:
-    """Возвращает временную ссылку на скачивание файла."""
-    client = _get_client()
+    client = _get_public_client()
     return client.generate_presigned_url(
         "get_object",
         Params={"Bucket": S3_BUCKET, "Key": s3_key},
