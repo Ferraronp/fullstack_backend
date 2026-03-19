@@ -11,3 +11,4 @@ httpx
 pytest-cov
 email-validator
 boto3
+groq
