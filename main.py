@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from db.database import Base, engine
-from routers import users, categories, operations, admin
+from routers import users, categories, operations, admin, seo
 from starlette.middleware.cors import CORSMiddleware
 from services.s3_service import ensure_bucket
 
@@ -29,6 +29,7 @@ app.include_router(users.router)
 app.include_router(categories.router)
 app.include_router(operations.router)
 app.include_router(admin.router)
+app.include_router(seo.router)
 
 
 @app.get("/")
