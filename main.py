@@ -36,3 +36,4 @@ app.include_router(analysis.router)
 @app.get("/")
 def root():
     return {"message": "Finance API with Auth is running"}
+# python -m pytest tests/ --cov=. --cov-report=term-missing -q

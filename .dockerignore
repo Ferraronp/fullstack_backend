@@ -1,0 +1,49 @@
+# Виртуальные окружения
+.venv/
+venv/
+env/
+ENV/
+
+# Python кэш
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Тесты и покрытие
+tests/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# CI/CD
+.github/
+
+# Git
+.git/
+.gitignore
+
+# Переменные окружения (секреты не в образ!)
+.env
+.env.*
+!.env.example
+
+# БД и логи
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# Документация и IDE
+*.md
+README*
+.idea/
+.vscode/
+*.iml
+
+# Docker-файлы (не нужны внутри образа)
+Dockerfile
+docker-compose*.yml
+.dockerignore
