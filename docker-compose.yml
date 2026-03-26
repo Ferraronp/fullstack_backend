@@ -24,9 +24,7 @@ services:
 
   # ─── Backend (FastAPI) ────────────────────────────────────────
   backend:
-    build:
-      context: ./fullstack_backend
-      dockerfile: Dockerfile
+    image: ferraronp/fullstack-backend:latest
     expose:
       - "8000"
     env_file:
@@ -47,9 +45,7 @@ services:
 
   # ─── Frontend (React → nginx) ─────────────────────────────────
   frontend:
-    build:
-      context: ./fullstack_frontend
-      dockerfile: Dockerfile
+    image: ferraronp/fullstack-frontend:latest
     expose:
       - "80"
     networks:
@@ -69,7 +65,7 @@ services:
     expose:
       - "9000"
     ports:
-      - "9001:9001"   # MinIO Console только для разработки
+      - "9001:9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
